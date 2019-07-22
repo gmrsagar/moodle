@@ -1779,7 +1779,7 @@ class grade_item extends grade_object {
         }
 
         // do we have comment from teacher?
-        if ($feedback !== false) {
+        if ((bool)$feedback !== false) {
             if ($this->is_overridable_item_feedback()) {
                 // external items (modules, plugins) may have own feedback
                 $grade->overridden = time();
