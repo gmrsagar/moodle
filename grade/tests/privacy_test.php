@@ -213,7 +213,7 @@ class core_grades_privacy_testcase extends provider_testcase {
         $gi2a->update_final_grade($u2->id, 10, 'test');
 
         // User 3 is set as modifier.
-        $gi1a->update_final_grade($u1->id, 1, 'test', '', FORMAT_MOODLE, $u3->id);
+        $gi1a->update_final_grade($u1->id, 1, 'test', true, FORMAT_MOODLE, $u3->id);
 
         // User 4 is set as modifier, and creates history..
         $this->setUser($u4);
@@ -376,7 +376,7 @@ class core_grades_privacy_testcase extends provider_testcase {
         $gi2a->update_final_grade($u2->id, 10, 'test');
 
         // User 3 is set as modifier.
-        $gi1a->update_final_grade($u1->id, 1, 'test', '', FORMAT_MOODLE, $u3->id);
+        $gi1a->update_final_grade($u1->id, 1, 'test', true, FORMAT_MOODLE, $u3->id);
 
         // User 4 is set as modifier, and creates history..
         $this->setUser($u4);
