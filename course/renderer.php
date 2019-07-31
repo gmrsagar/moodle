@@ -372,13 +372,23 @@ class core_course_renderer extends plugin_renderer_base {
                 $inputsize = 30;
         }
 
-        $data = (object) [
-                'searchurl' => (new moodle_url('/course/search.php'))->out(false),
-                'id' => $formid,
-                'inputid' => $inputid,
-                'inputsize' => $inputsize,
-                'value' => $value
-        ];
+        $globalsearch = \core_search\manager::is_global_search_enabled();
+        $data = new stdClass();
+        $searchurl = new moodle_url('/course/search.php');
+        $name = 'search';
+        if ($globalsearch) {
+            $searchurl = new moodle_url('/search/index.php');
+            $name = 'q';
+            $data->areaids = 'core_course-course';
+        }
+
+        $data->searchurl = ($searchurl)->out(false);
+        $data->id = $formid;
+        $data->inputid = $inputid;
+        $data->inputsize = $inputsize;
+        $data->value = $value;
+        $data->name = $name;
+
         if ($format != 'navbar') {
             $helpicon = new \help_icon('coursesearch', 'core');
             $data->helpicon = $helpicon->export_for_template($this);
