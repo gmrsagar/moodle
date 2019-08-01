@@ -67,12 +67,21 @@ class course_renderer extends \core_course_renderer {
                 $inputsize = 30;
         }
 
+        $globalsearch = get_config('core', 'enableglobalsearch');
+        $searchurl = new moodle_url('/course/search.php');
+        $name = 'search';
+        if ($globalsearch) {
+            $searchurl = new moodle_url('/search/index.php');
+            $name = 'q';
+        }
+
         $data = (object) [
-            'searchurl' => (new moodle_url('/course/search.php'))->out(false),
+            'searchurl' => ($searchurl)->out(false),
             'id' => $formid,
             'inputid' => $inputid,
             'inputsize' => $inputsize,
-            'value' => $value
+            'value' => $value,
+            'name' => $name
         ];
 
         return $this->render_from_template('theme_boost/course_search_form', $data);
