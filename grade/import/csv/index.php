@@ -114,9 +114,15 @@ if ($formdata = $mform2->get_data()) {
     $status = $gradeimport->prepare_import_grade_data($header, $formdata, $csvimport, $course->id, $separatemode,
             $currentgroup, $verbosescales);
 
+    if ($formdata->mapping_7) {
+        $importfeedback = true;
+    } else {
+        $importfeedback = false;
+    }
+
     // At this stage if things are all ok, we commit the changes from temp table.
     if ($status) {
-        grade_import_commit($course->id, $importcode);
+        grade_import_commit($course->id, $importcode, $importfeedback);
     } else {
         $errors = $gradeimport->get_gradebookerrors();
         $errors[] = get_string('importfailed', 'grades');
