@@ -2594,6 +2594,27 @@ function dayofweek($day, $month, $year) {
 function get_login_url() {
     global $CFG;
 
+    $redirect = optional_param('redirect', 1, PARAM_BOOL);
+
+    if (!empty($CFG->alternateloginurl) && $redirect) {
+        $loginurl = new moodle_url($CFG->alternateloginurl);
+
+        $loginurlstr = $loginurl->out(false);
+
+        if (strpos($SESSION->wantsurl, $loginurlstr) === 0) {
+            // We do not want to return to alternate url.
+            $SESSION->wantsurl = null;
+        }
+
+        // If error code then add that to url.
+        if ($errorcode) {
+            $loginurl->param('errorcode', $errorcode);
+        }
+
+        redirect($loginurl->out(false));
+
+    }
+
     return "$CFG->wwwroot/login/index.php";
 }
 
