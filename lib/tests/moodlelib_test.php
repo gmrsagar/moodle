@@ -4488,6 +4488,31 @@ class core_moodlelib_testcase extends advanced_testcase {
     }
 
     /**
+     * Test the get_login_url with and without redirect
+     *
+     */
+    public function test_login_bypass_alternateurl_config() {
+        global $SESSION, $CFG;
+        $SESSION->wantsurl = '';
+
+        $expected = "$CFG->wwwroot/login/index.php";
+        $actual = get_login_url();
+        $this->assertEquals($expected, $actual);
+
+        $CFG->alternateloginurl = "$CFG->wwwroot/local/custom.php";
+        $expected = "$CFG->wwwroot/local/custom.php";
+        $actual = get_login_url();
+        $this->assertEquals($expected, $actual);
+
+        $_GET['redirect'] = '0'; // Pass the redirect query_param.
+        $expected = "$CFG->wwwroot/login/index.php";
+        $actual = get_login_url();
+        $this->assertEquals($expected, $actual);
+
+        $CFG->alternateloginurl = "";
+    }
+
+    /**
      * Data provider for the test_get_time_interval_string() method.
      */
     public function get_time_interval_string_provider() {

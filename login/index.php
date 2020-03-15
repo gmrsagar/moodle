@@ -31,7 +31,7 @@ redirect_if_major_upgrade_required();
 
 $testsession = optional_param('testsession', 0, PARAM_INT); // test session works properly
 $anchor      = optional_param('anchor', '', PARAM_RAW);     // Used to restore hash anchor to wantsurl.
-
+$redirect    = optional_param('redirect', 1, PARAM_BOOL);   // Used to bypass alternateurl config.
 $resendconfirmemail = optional_param('resendconfirmemail', false, PARAM_BOOL);
 
 // It might be safe to do this for non-Behat sites, or there might
@@ -308,22 +308,26 @@ if (empty($SESSION->wantsurl)) {
 }
 
 /// Redirect to alternative login URL if needed
-if (!empty($CFG->alternateloginurl)) {
-    $loginurl = new moodle_url($CFG->alternateloginurl);
+if (!empty($CFG->alternateloginurl) && $redirect) {
+    $loginurl = get_login_url();
+    if ($loginurl !== $PAGE->url->out(false)) {
 
-    $loginurlstr = $loginurl->out(false);
+        $loginurl = new moodle_url($loginurl);
 
-    if (strpos($SESSION->wantsurl, $loginurlstr) === 0) {
-        // We do not want to return to alternate url.
-        $SESSION->wantsurl = null;
+        $loginurlstr = $loginurl->out(false);
+
+        if (strpos($SESSION->wantsurl, $loginurlstr) === 0) {
+            // We do not want to return to alternate url.
+            $SESSION->wantsurl = null;
+        }
+
+        // If error code then add that to url.
+        if ($errorcode) {
+            $loginurl->param('errorcode', $errorcode);
+        }
+
+        redirect($loginurl->out(false));
     }
-
-    // If error code then add that to url.
-    if ($errorcode) {
-        $loginurl->param('errorcode', $errorcode);
-    }
-
-    redirect($loginurl->out(false));
 }
 
 /// Generate the login page with forms
