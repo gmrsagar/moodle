@@ -2601,17 +2601,7 @@ function get_login_url() {
 
         $loginurlstr = $loginurl->out(false);
 
-        if (strpos($SESSION->wantsurl, $loginurlstr) === 0) {
-            // We do not want to return to alternate url.
-            $SESSION->wantsurl = null;
-        }
-
-        // If error code then add that to url.
-        if ($errorcode) {
-            $loginurl->param('errorcode', $errorcode);
-        }
-
-        redirect($loginurl->out(false));
+        return $loginurlstr;
 
     }
 
