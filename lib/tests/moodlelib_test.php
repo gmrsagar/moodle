@@ -56,6 +56,28 @@ class core_moodlelib_testcase extends advanced_testcase {
         $stringmanager->reset_caches(true);
     }
 
+    /**
+     * Test the get_login_url
+     * 
+     * @group new
+     */
+    public function test_login_bypass_alternateurl_config()
+    {
+        global $SESSION, $CFG, $DB;
+        $SESSION->wantsurl = '';
+
+        $expected = "$CFG->wwwroot/login/index.php";
+        $actual = get_login_url();
+        $this->assertEquals($expected, $actual);
+
+        $CFG->alternateloginurl = "$CFG->wwwroot/local/custom.php";
+        $expected = "$CFG->wwwroot/local/custom.php";
+        $actual = get_login_url();
+        $this->assertEquals($expected, $actual);
+
+        $CFG->alternateloginurl = "";
+    }
+
     public function test_cleanremoteaddr() {
         // IPv4.
         $this->assertNull(cleanremoteaddr('1023.121.234.1'));
