@@ -2596,7 +2596,7 @@ function get_login_url() {
 
     $redirect = optional_param('redirect', 1, PARAM_BOOL);
 
-    if (!empty($CFG->alternateloginurl) && $redirect) {
+    if (!empty($CFG->alternateloginurl) && $redirect && !isloggedin()) {
         $loginurl = new moodle_url($CFG->alternateloginurl);
 
         $loginurlstr = $loginurl->out(false);
