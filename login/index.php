@@ -31,7 +31,7 @@ redirect_if_major_upgrade_required();
 
 $testsession = optional_param('testsession', 0, PARAM_INT); // test session works properly
 $anchor      = optional_param('anchor', '', PARAM_RAW);     // Used to restore hash anchor to wantsurl.
-
+$redirect    = optional_param('redirect', 1, PARAM_BOOL);   // Used to bypass alternateurl config.
 $resendconfirmemail = optional_param('resendconfirmemail', false, PARAM_BOOL);
 
 // It might be safe to do this for non-Behat sites, or there might
@@ -308,7 +308,7 @@ if (empty($SESSION->wantsurl)) {
 }
 
 /// Redirect to alternative login URL if needed
-if (!empty($CFG->alternateloginurl)) {
+if (!empty($CFG->alternateloginurl) && $redirect) {
     $loginurl = new moodle_url($CFG->alternateloginurl);
 
     $loginurlstr = $loginurl->out(false);
