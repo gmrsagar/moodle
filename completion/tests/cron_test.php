@@ -18,16 +18,22 @@
  * Course completion cron unit tests
  *
  * @package    core
- * @category   phpunit
+ * @category   completion
  * @copyright  2012 Aaron Barnes <aaronb@catalyst.net.nz>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-require_once("{$CFG->dirroot}/completion/tests/lib.php");
+use core\task\completion_daily_task;
 
+/**
+ * Course completion cron test
+ *
+ * @package   core
+ * @category  completion
+ * @copyright 2012 Aaron Barnes <aaronb@catalyst.net.nz>
+ */
 class completioncron_testcase extends completion_testcase {
 
     /**
@@ -41,7 +47,7 @@ class completioncron_testcase extends completion_testcase {
      * - Users who have no current enrolments are not handled
      * - Ignore courses with completion disabled
      */
-    public function test_completion_cron_mark_started() {
+    public function test_update_completions() {
         global $CFG, $DB;
 
         $this->_create_complex_testdata();
@@ -55,47 +61,48 @@ class completioncron_testcase extends completion_testcase {
         $user3 = $this->_testusers[3];
         $user4 = $this->_testusers[4];
 
-        $now =    $this->_testdates['now'];
-        $past =   $this->_testdates['past'];
+        $now = $this->_testdates['now'];
+        $past = $this->_testdates['past'];
         $future = $this->_testdates['future'];
 
-        // Run cron function to test
-        require_once("{$CFG->dirroot}/completion/cron.php");
-        completion_cron_mark_started();
+        // Run cron function to test.
+        $task = new completion_daily_task();
+        $task->update_completions();
 
-        // Load all records for these courses in course_completions
-        // Return results indexed by userid (which will not hide duplicates due to their being a unique index on that and the course columns)
+        // Load all records for these courses in course_completions.
+        // Return results indexed by userid.
+        // (which will not hide duplicates due to their being a unique index on that and the course columns).
         $cc1 = $DB->get_records('course_completions', array('course' => $course1->id), '', 'userid, *');
         $cc2 = $DB->get_records('course_completions', array('course' => $course2->id), '', 'userid, *');
         $cc3 = $DB->get_records('course_completions', array('course' => $course3->id), '', 'userid, *');
 
-        // Test results
-        // Check correct number of records
+        // Test results.
+        // Check correct number of records.
         $this->assertEquals(4, $DB->count_records('course_completions', array('course' => $course1->id)));
         $this->assertEquals(3, $DB->count_records('course_completions', array('course' => $course2->id)));
 
-        // All users should be mark started in course1
-        $this->assertEquals($past-2,    $cc1[$user2->id]->timeenrolled);
+        // All users should be mark started in course1.
+        $this->assertEquals($past - 2, $cc1[$user2->id]->timeenrolled);
         $this->assertGreaterThanOrEqual($now, $cc1[$user4->id]->timeenrolled);
         $this->assertLessThan($now + 60, $cc1[$user4->id]->timeenrolled);
 
-        // User1 should have a timeenrolled in course1 of $past-5 (due to multiple enrolments)
-        $this->assertEquals($past-5,    $cc1[$user1->id]->timeenrolled);
+        // User1 should have a timeenrolled in course1 of $past-5 (due to multiple enrolments).
+        $this->assertEquals($past - 5, $cc1[$user1->id]->timeenrolled);
 
-        // User3 should have a timeenrolled in course1 of $past-2 (due to multiple enrolments)
-        $this->assertEquals($past-2,    $cc1[$user3->id]->timeenrolled);
+        // User3 should have a timeenrolled in course1 of $past-2 (due to multiple enrolments).
+        $this->assertEquals($past - 2, $cc1[$user3->id]->timeenrolled);
 
-        // User 2 should not be mark as started in course2 at all (nothing current)
-        $this->assertEquals(false,      isset($cc2[$user2->id]));
+        // User 2 should not be mark as started in course2 at all (nothing current).
+        $this->assertEquals(false, isset($cc2[$user2->id]));
 
-        // Add some enrolment to course2 with different times to check for bugs
-        $this->assertEquals($past-10,   $cc2[$user1->id]->timeenrolled);
-        $this->assertEquals($past-15,   $cc2[$user3->id]->timeenrolled);
+        // Add some enrolment to course2 with different times to check for bugs.
+        $this->assertEquals($past - 10, $cc2[$user1->id]->timeenrolled);
+        $this->assertEquals($past - 15, $cc2[$user3->id]->timeenrolled);
 
-        // Add enrolment in course2 for user4 (who will be already started)
-        $this->assertEquals($past-50,   $cc2[$user4->id]->timeenrolled);
+        // Add enrolment in course2 for user4 (who will be already started).
+        $this->assertEquals($past - 50, $cc2[$user4->id]->timeenrolled);
 
-        // Check no records in course with completion disabled
+        // Check no records in course with completion disabled.
         $this->assertEquals(0, $DB->count_records('course_completions', array('course' => $course3->id)));
     }
 }

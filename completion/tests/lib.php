@@ -18,22 +18,42 @@
  * Course completion unit test helper
  *
  * @package    core
- * @category   phpunit
+ * @category   completion
  * @copyright  2012 Aaron Barnes <aaronb@catalyst.net.nz>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Course completion test helper class
+ *
+ * @package core_completion
+ * @category completion
+ * @copyright 2020 Catalyst IT Ltd
+ * @author Sagar Ghimire <sagarghimire@catalyst-au.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 abstract class completion_testcase extends advanced_testcase {
 
     /**
-     * Test data
+     * @var array $_testcourses Test Courses
      */
     protected $_testcourses = array();
+
+    /**
+     * @var array $_testusers Test Users
+     */
     protected $_testusers = array();
+
+    /**
+     * @var array $_testdates Test Dates
+     */
     protected $_testdates = array();
 
+    /**
+     * Create testdata for the completion_completion_testcase
+     */
     protected function _create_complex_testdata() {
         global $DB;
 
@@ -41,62 +61,57 @@ abstract class completion_testcase extends advanced_testcase {
 
         $gen = $this->getDataGenerator();
 
-        // Setup a couple of courses
+        // Setup a couple of courses.
         $courseparams = array('enablecompletion' => 1, 'completionstartonenrol' => 1);
         $course1 = $gen->create_course($courseparams);
         $course2 = $gen->create_course($courseparams);
         $course3 = $gen->create_course();
+        $sql = "UPDATE {enrol}
+                   SET status = ?
+                 WHERE courseid IN (?, ?, ?)";
 
-        // Make all enrolment plugins enabled
-        $DB->execute(
-            "
-            UPDATE
-                {enrol}
-            SET
-                status = ?
-            WHERE
-                courseid IN (?, ?, ?)
-            ",
+        // Make all enrolment plugins enabled.
+        $DB->execute($sql,
             array(
                 ENROL_INSTANCE_ENABLED,
                 $course1->id, $course2->id, $course3->id
             )
         );
 
-        // Setup some users
+        // Setup some users.
         $user1 = $gen->create_user();
         $user2 = $gen->create_user();
         $user3 = $gen->create_user();
         $user4 = $gen->create_user();
 
-        // Enrol the users
+        // Enrol the users.
         $now    = time();
-        $past   = $now - (60*60*24);
-        $future = $now + (60*60*24);
+        $past   = $now - (60 * 60 * 24);
+        $future = $now + (60 * 60 * 24);
 
         $enrolments = array(
-            // All users should be mark started in course1
-            array($course1->id, $user1->id, $past,      0,              null),
-            array($course1->id, $user2->id, $past-2,    0,              null),
-            array($course1->id, $user3->id, 0,          0,              null),
-            array($course1->id, $user4->id, 0,          0,              null),
-            // User1 should have a timeenrolled in course1 of $past-5 (due to multiple enrolments)
-            array($course1->id, $user1->id, $past-5,    0,              'self'),
-            // User3 should have a timeenrolled in course1 of $past-2 (due to multiple enrolments)
-            array($course1->id, $user3->id, $past-2,    0,              'self'),
-            array($course1->id, $user3->id, $past-100,  $past,          null), // in the past
-            array($course1->id, $user3->id, $future,    $future+100,    null), // in the future
-            // User 2 should not be mark as started in course2 at all (nothing current)
-            array($course2->id, $user2->id, $future,    0,              null),
-            array($course2->id, $user2->id, 0,          $past,          null),
-            // Add some enrolment to course2 with different times to check for bugs
-            array($course2->id, $user1->id, $past-10,   0,              null),
-            array($course2->id, $user3->id, $past-15,   0,              null),
-            // Add enrolment in course2 for user4 (who will be already started)
-            array($course2->id, $user4->id, $past-13,   0,              null),
-            // Add enrolment in course3 even though completion is not enabled
-            array($course3->id, $user1->id, 0,          0,              null),
-            // Add multiple enrolments of same type!
+            // All users should be mark started in course1.
+            array($course1->id, $user1->id, $past, 0, null),
+            array($course1->id, $user2->id, $past - 2, 0, null),
+            array($course1->id, $user3->id, 0, 0, null),
+            array($course1->id, $user4->id, 0, 0, null),
+            // User1 should have a timeenrolled in course1 of $past-5 (due to multiple enrolments).
+            array($course1->id, $user1->id, $past - 5, 0, 'self'),
+            // User3 should have a timeenrolled in course1 of $past-2 (due to multiple enrolments).
+            array($course1->id, $user3->id, $past - 2, 0, 'self'),
+            array($course1->id, $user3->id, $past - 100, $past, null), // In the past.
+            array($course1->id, $user3->id, $future, $future + 100, null), // In the future.
+            // User 2 should not be mark as started in course2 at all (nothing current).
+            array($course2->id, $user2->id, $future, 0, null),
+            array($course2->id, $user2->id, 0, $past, null),
+            // Add some enrolment to course2 with different times to check for bugs.
+            array($course2->id, $user1->id, $past - 10, 0, null),
+            array($course2->id, $user3->id, $past - 15, 0, null),
+            // Add enrolment in course2 for user4 (who will be already started).
+            array($course2->id, $user4->id, $past - 13, 0, null),
+            // Add enrolment in course3 even though completion is not enabled.
+            array($course3->id, $user1->id, 0, 0, null),
+            // Add multiple enrolments of same type.
         );
 
         foreach ($enrolments as $enrol) {
@@ -112,20 +127,19 @@ abstract class completion_testcase extends advanced_testcase {
             }
         }
 
-        // Delete all old records in case they were missed
+        // Delete all old records in case they were missed.
         $DB->delete_records('course_completions', array('course' => $course1->id));
         $DB->delete_records('course_completions', array('course' => $course2->id));
         $DB->delete_records('course_completions', array('course' => $course3->id));
 
-        // Create course_completions record for user4 in course2
+        // Create course_completions record for user4 in course2.
         $params = array(
             'course'        => $course2->id,
             'userid'        => $user4->id,
-            'timeenrolled'  => $past-50,
+            'timeenrolled'  => $past - 50,
             'reaggregate'   => 0
         );
         $DB->insert_record('course_completions', $params);
-
 
         $this->_testcourses[1] = $course1;
         $this->_testcourses[2] = $course2;

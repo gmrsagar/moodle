@@ -180,50 +180,37 @@ class completion_completion extends data_object {
      * Save course completion status
      *
      * This method creates a course_completions record if none exists
-     * and also calculates the timeenrolled date if the record is being
-     * created
-     *
      * @access  private
      * @return  bool
      */
     private function _save() {
-        // Make sure timeenrolled is not null
-        if (!$this->timeenrolled) {
+        if ($this->timeenrolled === null) {
             $this->timeenrolled = 0;
         }
 
         $result = false;
         // Save record
         if ($this->id) {
-            // Update
-            return $this->update();
+            $result = $this->update();
         } else {
-            // Create new
+            // Create new.
             if (!$this->timeenrolled) {
                 global $DB;
 
-                // Get earliest current enrolment start date
-                // This means timeend > now() and timestart < now()
-                $sql = "
-                    SELECT
-                        ue.timestart
-                    FROM
-                        {user_enrolments} ue
-                    JOIN
-                        {enrol} e
-                    ON (e.id = ue.enrolid AND e.courseid = :courseid)
-                    WHERE
-                        ue.userid = :userid
-                    AND ue.status = :active
-                    AND e.status = :enabled
-                    AND (
-                        ue.timeend = 0
-                     OR ue.timeend > :now
-                    )
-                    AND ue.timeend < :now2
-                    ORDER BY
-                        ue.timestart ASC
-                ";
+                // Get earliest current enrolment start date.
+                // This means timeend > now() and timestart < now().
+                $sql = "SELECT ue.timestart
+                          FROM {user_enrolments} ue
+                          JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = :courseid)
+                         WHERE ue.userid = :userid
+                           AND ue.status = :active
+                           AND e.status = :enabled
+                           AND ( ue.timeend = 0
+                                 OR ue.timeend > :now
+                               )
+                           AND ue.timeend < :now2
+                      ORDER BY ue.timestart ASC";
+
                 $params = array(
                     'enabled'   => ENROL_INSTANCE_ENABLED,
                     'active'    => ENROL_USER_ACTIVE,
@@ -237,12 +224,11 @@ class completion_completion extends data_object {
                     $this->timeenrolled = $enrolments->timestart;
                 }
 
-                // If no timeenrolled could be found, use current time
+                // If no timeenrolled could be found, use current time.
                 if (!$this->timeenrolled) {
                     $this->timeenrolled = time();
                 }
             }
-
             // Make sure reaggregate field is not null
             if (!$this->reaggregate) {
                 $this->reaggregate = 0;
