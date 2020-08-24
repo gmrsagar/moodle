@@ -133,7 +133,14 @@ if ($mform->is_cancelled()) {
         $data->grademin = 0;
     }
 
-    $hidden      = empty($data->hidden) ? 0: $data->hidden;
+    // Check if hidden has a previous value.
+    if (isset($item->hidden)) {
+        // Only update hidden if it has been changed.
+        if ($data->hidden != $item->hidden) {
+            $hidden = empty($data->hidden) ? 0 : $data->hidden;
+        }
+    }
+
     $hiddenuntil = empty($data->hiddenuntil) ? 0: $data->hiddenuntil;
     unset($data->hidden);
     unset($data->hiddenuntil);
@@ -188,7 +195,7 @@ if ($mform->is_cancelled()) {
     // update hiding flag
     if ($hiddenuntil) {
         $grade_item->set_hidden($hiddenuntil, false);
-    } else {
+    } else if (isset($hidden)) {
         $grade_item->set_hidden($hidden, false);
     }
 
